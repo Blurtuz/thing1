@@ -1,12 +1,22 @@
 // Keep the downloadable application source current, without including credentials or dependencies.
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { access, readFile, readdir, writeFile } from 'node:fs/promises';
 import { crc32 } from 'node:zlib';
 const root = new URL('../', import.meta.url);
-const files = [
+const candidates = [
   'package.json', 'package-lock.json', 'server.mjs', 'Dockerfile', 'render.yaml',
   '.gitignore', '.dockerignore', '.node-version', '.env.example',
   'README.md', 'SETUP.md', 'PROJECT-NOTES.md', 'VERIFICATION.md', 'THIRD-PARTY-NOTICES.md', 'LICENSE',
 ];
+const files = [];
+for (const path of candidates) {
+  try {
+    await access(new URL(path, root));
+    files.push(path);
+  } catch (error) {
+    // Browser uploads can omit dotfiles. They are optional for hosted startup.
+    if (error.code !== 'ENOENT' || !path.startsWith('.')) throw error;
+  }
+}
 async function collect(directory) {
   for (const entry of await readdir(new URL(directory, root), { withFileTypes: true })) {
     if (entry.name.startsWith('.') || entry.name.endsWith('.log') || entry.name === 'source.zip') continue;
