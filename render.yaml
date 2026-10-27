@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: school-proxy-lab
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev --ignore-scripts
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24.22.1
+      - key: PROXY_PASSWORD
+        sync: false
